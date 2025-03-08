@@ -1,0 +1,47 @@
+service: todo-backend
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-central-1
+  environment:
+    TABLE_NAME: TasksTable
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:Scan
+      Resource: "arn:aws:dynamodb:eu-central-1:*:table/TasksTable"
+
+plugins:
+  - serverless-offline
+
+functions:
+  api:
+    handler: src/handler.handler
+    memorySize: 128
+    timeout: 6
+    events:
+      - http:
+          path: /
+          method: ANY
+      - http:
+          path: /{proxy+}
+          method: ANY
+
+resources:
+  Resources:
+    TasksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: TasksTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
